@@ -1,0 +1,32 @@
+image:
+  repository: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app  # my app
+  tag: latest
+  pullPolicy: Always
+
+
+  livenessProbe:
+    failureThreshold: 5
+    initialDelaySeconds: 5
+    timeoutSeconds: 2
+    path: "/"
+  readinessProbe:
+    failureThreshold: 10
+    initialDelaySeconds: 5
+    timeoutSeconds: 2
+    path: "/"
+  service:
+    type: ClusterIP
+    port: 8080
+
+db:
+  user: django_aws
+  password: 12345678q
+  host: postgres-db.cdsm2gomilsw.eu-central-1.rds.amazonaws.com  # change
+  name: django_db
+
+ingress:
+  enabled: true
+  host: helm-chart.top-devops.com
+  tls:
+    enabled: true
+    certificateArn: arn:aws:acm:eu-central-1:777484289756:certificate/c71f219a-8e4e-4856-be72-68f1fe1e065e

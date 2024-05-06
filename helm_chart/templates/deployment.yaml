@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  labels:
+    app: django
+spec:
+  replicas: 2  
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      initContainers:
+        - name: django-migrate
+          image: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
+          command: ["sh", "-c", "python3 manage.py migrate"]
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: db-password
+            - name: DATABASE_URL
+              value: postgresql://{{ .Values.db.user }}:$(DATABASE_PASSWORD)@{{ .Values.db.host }}:5432/{{ .Values.db.name }}
+            - name: DJANGO_ALLOWED_HOSTS
+              value: "*"
+      containers:
+        - name: django
+          image: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
+          command: ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8080"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: db-password
+            - name: DATABASE_URL
+              value: postgresql://{{ .Values.db.user }}:$(DATABASE_PASSWORD)@{{ .Values.db.host }}:5432/{{ .Values.db.name }}
+            - name: DJANGO_ALLOWED_HOSTS
+              value: "*"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10

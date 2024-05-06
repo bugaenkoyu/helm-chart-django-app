@@ -1,15 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: my-ingress-lb
+  name: {{ .Values.ingress.name }}
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/load-balancer-name: "my-ingress-lb"
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:777484289756:certificate/c71f219a-8e4e-4856-be72-68f1fe1e065e
+    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.scheme }}
+    alb.ingress.kubernetes.io/target-type: {{ .Values.ingress.targetType }}
+    alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.ingress.loadBalancerName }}"
+    alb.ingress.kubernetes.io/listen-ports: '{{ .Values.ingress.listenPorts}}'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
 spec:
-  ingressClassName: alb
+  ingressClassName: {{ .Values.alb.ingressClassName }}
   rules:
   - host: {{ .Values.ingress.host }}
     http:
@@ -18,7 +18,7 @@ spec:
           pathType: Prefix
           backend:
             service:
-              name: django-service 
+              name: {{ .Chart.Name }}-service 
               port:
-                number: 80
+                number: {{ .Values.service.port }}
   

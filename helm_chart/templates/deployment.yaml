@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: django-app
+  name: {{ .Chart.Name }}-app
   labels:
-    app: django
+    app: {{ .Chart.Name }}
 spec:
-  replicas: 2  
+  replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
-      app: django
+      app: {{ .Chart.Name }}
   template:
     metadata:
       labels:
-        app: django
+        app: {{ .Chart.Name }}
     spec:
       initContainers:
-        - name: django-migrate
-          image: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
+        - name: {{ .Chart.Name }}-migrate
+          image: {{ .Values.app.image }}
           command: ["sh", "-c", "python3 manage.py migrate"]
           env:
             - name: DATABASE_PASSWORD
@@ -24,35 +24,65 @@ spec:
                 secretKeyRef:
                   name: db-secrets
                   key: db-password
+            - name: DATABASE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_user
+            - name: DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_name
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_host
             - name: DATABASE_URL
-              value: postgresql://{{ .Values.db.user }}:$(DATABASE_PASSWORD)@{{ .Values.db.host }}:5432/{{ .Values.db.name }}
+              value: postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@$(DATABASE_HOST):5432/$(DATABASE_NAME)
             - name: DJANGO_ALLOWED_HOSTS
-              value: "*"
+              value: "{{ .Values.app.allowedHosts }}"
       containers:
-        - name: django
-          image: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
-          command: ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8080"]
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.app.image }}
+          command: ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:{{ .Values.app.port }}"]
           ports:
-            - containerPort: 8080
+            - containerPort: {{ .Values.app.port }}
           env:
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: db-secrets
                   key: db-password
+            - name: DATABASE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_user
+            - name: DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_name
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_host
             - name: DATABASE_URL
-              value: postgresql://{{ .Values.db.user }}:$(DATABASE_PASSWORD)@{{ .Values.db.host }}:5432/{{ .Values.db.name }}
+              value: postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@$(DATABASE_HOST):5432/$(DATABASE_NAME)
             - name: DJANGO_ALLOWED_HOSTS
-              value: "*"
+              value: "{{ .Values.app.allowedHosts }}"
           readinessProbe:
             httpGet:
               path: /
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 10
+              port: {{ .Values.app.port }}
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
           livenessProbe:
             httpGet:
               path: /
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+              port: {{ .Values.app.port }}
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}

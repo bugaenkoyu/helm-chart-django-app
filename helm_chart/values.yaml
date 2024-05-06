@@ -1,32 +1,43 @@
-image:
-  repository: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app  # my app
-  tag: latest
-  pullPolicy: Always
+app:
+  replicas: 2
+  image: 777484289756.dkr.ecr.eu-central-1.amazonaws.com/django-app:latest
+  allowedHosts: "*"
+  port: 8080
 
+probes:
+  readiness:
+    initialDelaySeconds: 15
+    periodSeconds: 10
+  liveness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
 
-  livenessProbe:
-    failureThreshold: 5
-    initialDelaySeconds: 5
-    timeoutSeconds: 2
-    path: "/"
-  readinessProbe:
-    failureThreshold: 10
-    initialDelaySeconds: 5
-    timeoutSeconds: 2
-    path: "/"
-  service:
-    type: ClusterIP
-    port: 8080
+# hpa
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 4
 
-db:
-  user: django_aws
-  password: 12345678q
-  host: postgres-db.cdsm2gomilsw.eu-central-1.rds.amazonaws.com  # change
-  name: django_db
+metrics:
+  cpu:
+    averageUtilization: 80
+  memory:
+    averageUtilization: 80
 
+#service
+service:
+  port: 80        
+  targetPort: 8080  
+  type: NodePort
+
+# ingress
 ingress:
-  enabled: true
+  name: my-ingress-lb 
+  scheme: internet-facing
+  targetType: ip
+  loadBalancerName: my-ingress-lb
+  listenPorts: '[{"HTTP": 80}, {"HTTPS": 443}]'
+  certificateArn: arn:aws:acm:eu-central-1:777484289756:certificate/c71f219a-8e4e-4856-be72-68f1fe1e065e
   host: helm-chart.top-devops.com
-  tls:
-    enabled: true
-    certificateArn: arn:aws:acm:eu-central-1:777484289756:certificate/c71f219a-8e4e-4856-be72-68f1fe1e065e
+
+alb:
+  ingressClassName: alb  

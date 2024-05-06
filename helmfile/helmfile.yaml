@@ -1,0 +1,7 @@
+---
+releases:
+  - name: django-app
+    namespace: default
+    chart: ./../helm_chart
+    version: 0.1.0
+    installed: true

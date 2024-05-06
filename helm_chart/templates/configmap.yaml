@@ -1,11 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: django-config
+  name: db-config
 data:
-  DJANGO_ALLOWED_HOSTS: "*"
-  DEBUG: "False"
-  DATABASE_URL: "postgresql://user:db-password@db-host:5432/db-name"
-  db-user: {{ .Values.db.user }}
-  db-host: {{ .Values.db.host }}
-  db-name: {{ .Values.db.name }}
+  db_user: django_aws
+  db_host: postgres-db.cdsm2gomilsw.eu-central-1.rds.amazonaws.com  # change
+  db_name: django_db

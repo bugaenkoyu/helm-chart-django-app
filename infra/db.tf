@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "postgres" {
   name       = "postgres"
-  subnet_ids = ["subnet-0466845f9e331e971", "subnet-06ea3ebe44623176e"]  //change
+  subnet_ids = module.vpc.database_subnets //change
 }
 
 resource "aws_db_instance" "postgres_db" {
@@ -26,7 +26,7 @@ resource "aws_db_instance" "postgres_db" {
 # RDS Security Group (traffic ECS -> RDS)
 resource "aws_security_group" "postgres_sg" {
   name        = "rds-postgres"
-  vpc_id      = "vpc-05be99919c30eb2dc"   //change
+  vpc_id      = module.vpc.vpc_id
 
   tags = {
     Name = "PostgreSQL-Security-Group"
@@ -36,7 +36,7 @@ resource "aws_security_group" "postgres_sg" {
     protocol        = "tcp"
     from_port       = "5432"
     to_port         = "5432"
-    security_groups = ["sg-03d43a3321f156b3d"]  //change
+    security_groups = [module.eks.node_security_group_id]  
   }
 
   egress {

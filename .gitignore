@@ -1,2 +1,8 @@
 iam-policy.json
 /k8s/
+/debug/
+/test/ 
+/infra/.terraform.lock.hcl
+/infra/.terraform/
+/infra/CloudFormation-VPC.yaml
+/infra/terraform.tfstate

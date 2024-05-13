@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: db-config
 data:
-  db_user: django_aws
-  db_host: postgres-db.cdsm2gomilsw.eu-central-1.rds.amazonaws.com  # change
-  db_name: django_db
+  db_user: {{ .Values.db.db_user }}
+  db_host: {{ .Values.db.db_host }}
+  db_name: {{ .Values.db.db_name }}

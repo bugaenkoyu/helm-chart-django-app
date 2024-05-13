@@ -1,74 +1,24 @@
-## Installation VPC 
-To install VPC, I used the CloudFormation file (CloudFormation-VPC.yaml - which is attached in the infra folder). There I create all the necessary resources for my future cluster, such as VPC, public, private and db subnets, Internet Gateway, NAT Gateways, ElasticIP for NAT Gateways and all Route Tables. 
-You can start the execution both from AWS Cloudformation and from the CLI by running the command:
-```
-aws cloudformation create-stack \
-  --stack-name <stack-name> \
-  --template-body file://<path/to/file> \
-  --region <you_region>
-```
-## Creating k8s cluster
-To create a cluster subnet, I used the ClusterConfig file, in which I specified private and public subnets for resources that will be created in the future in the cluster. He also specified the number of nodes and the region and type of instances.
-To create a Cluster, use the command:
-```
-eksctl create cluster -f eks-cluster.yml 
-```
-## Creating PostgreSQL
-The Django app requires a postgresql database for correct operation. I used terraform to create it. In the template, you only need to specify your subnets, vpc and k8s security group. 
-To create a PostgreSQL, use the command:
+# Installation of all necessary infrastructure
+In order to install everything you need to install Django using Helm Chart, you need to go to the infra folder and run the following commands.
 ```
 terraform init
 terraform apply
 ```
+Before execution, you need to change all the changes to your own in the variables.tf file.
+
+## After the terraform is completed, the following resources will be created:
+1. Installation VPC 
+2. Creating k8s cluster
+3. Creating PostgreSQL
+4. Installation and configuration AWS Load Balancer Controller
+5. Create a IAM role and ServiceAccount
+
 
 ## Create Certificate
 To create a certificate in AWS, I used AWS Certificate Manager (ACM). I created a request and then used CNAME to confirm the ownership of the domain.
-## Installation and configuration AWS Load Balancer Controller
-### Setup IAM for ServiceAccount
-1. Create IAM OIDC provider
-```
-eksctl utils associate-iam-oidc-provider \
-    --region <aws-region> \
-    --cluster <your-cluster-name> \
-    --approve
-```
-2. Download IAM policy for the AWS Load Balancer Controller
-```
-curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
-```
-3. Create an IAM policy called AWSLoadBalancerControllerIAMPolicy
-```
-aws iam create-policy \
-    --policy-name AWSLoadBalancerControllerIAMPolicy \
-    --policy-document file://iam-policy.json
-```
-Take note of the policy ARN that is returned
-4. Create a IAM role and ServiceAccount for the Load Balancer controller, use the ARN from the step above
-```
-eksctl create iamserviceaccount \
---cluster=<cluster-name> \
---namespace=kube-system \
---name=aws-load-balancer-controller \
---attach-policy-arn=arn:aws:iam::<AWS_ACCOUNT_ID>:policy/AWSLoadBalancerControllerIAMPolicy \
---approve \
---region eu-central-1
-```
-### Installing the Chart
-1. Add the EKS repository to Helm:
-```
-helm repo add eks https://aws.github.io/eks-charts
-```
-2. Install the AWS Load Balancer controller
-```
-helm install \
-  aws-load-balancer-controller \
-  eks/aws-load-balancer-controller \
-  --set clusterName=<cluster-name> -n kube-system \
-  --set serviceAccount.create=false --set 
-
-```
 
 ### Deploying django-app Helm Chart
+In the values.yaml file, change the variables to your own and add db_host postgresql.
 To launch the Helm chart, go to the helmfile folder and run the following command:
 ```
 helmfile apply

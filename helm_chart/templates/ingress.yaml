@@ -8,6 +8,7 @@ metadata:
     alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.ingress.loadBalancerName }}"
     alb.ingress.kubernetes.io/listen-ports: '{{ .Values.ingress.listenPorts}}'
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
+    #external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
 spec:
   ingressClassName: {{ .Values.alb.ingressClassName }}
   rules:
